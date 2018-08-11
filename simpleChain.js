@@ -96,3 +96,8 @@ class Blockchain{
       }
     }
 }
+
+module.exports = { 
+  Block,
+  Blockchain
+}
