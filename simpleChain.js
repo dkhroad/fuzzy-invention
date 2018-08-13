@@ -27,32 +27,31 @@ class Block{
 class Blockchain{
   constructor() {
     this.chain = level(chainDB);
+    this.currentHeight = 0;
     this.genesisBlockPromise = this.addGenesisBlock();
   }
 
   addGenesisBlock() {
     let self = this;
     return new Promise((resolve,reject) => {
-      this.getBlock(1).
-        then(block => {
-          if (block.height != 1 || block.previousBlockHash) {
-            console.log('**Corrupt Genesis block',block);
-            reject('--Corrupt genesis block');
-          } else{
-            console.log('genesis block already exists');
-            resolve([]);
-          }
-        }).catch(err => {
-          if (err.notFound) {
+      this.getBlockHeight().
+        then(height => {
+          if (height === 0) {
             console.log('adding genesis block...');
             let gBlock = new Block("First block in the chain - Genesis block");
             gBlock.height = 1;
             gBlock.time = new Date().getTime().toString().slice(0,-3);
             gBlock.hash = SHA256(JSON.stringify(gBlock)).toString();
             self.chain.put(gBlock.height.toString(),JSON.stringify(gBlock));
-          };
+          } else{
+            console.log('genesis block already exists',height);
+            self.currentHeight = height;            
+          }
         }).then(resp => {
-          console.log('genesis block added');
+          console.log('*resp',resp);
+          if (self.currentHeight == 0) {
+            self.currentHeight = 1;
+          }
           resolve([]);
         }).catch(err => {
           reject(err);
@@ -66,19 +65,21 @@ class Blockchain{
     let self = this;
     return new Promise((resolve,reject) => {
       self.genesisBlockPromise
-        .then(() => self.getLastBlock())
+        .then(() => self.getBlock(self.currentHeight))
         .then((lastBlock) => {
           if (lastBlock == null) {
             throw new Error('missing genesis block');
           } 
-          console.log('lastBlock: ',lastBlock.height);
+          console.log('lastBlock height: ',lastBlock.height,self.currentHeight);
           newBlock.previousBlockHash = lastBlock.hash;
           newBlock.height = lastBlock.height + 1;
           newBlock.time = new Date().getTime().toString().slice(0,-3);
           newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
-          console.log('adding block to chain',newBlock.height);
-          self.chain.put(newBlock.height.toString(),JSON.stringify(newBlock));
+          console.log('adding block to chain',newBlock.height,self.currentHeight);
+          self.chain.put(newBlock.height,JSON.stringify(newBlock));
       }).then(() => {
+        self.currentHeight++;
+        console.log('block added',self.currentHeight);
         resolve([]);
       }).catch((err) => {
         console.log(err);
@@ -94,6 +95,21 @@ class Blockchain{
      });
  }
 
+ getBlockHeight() {
+    let i=0;
+    let self = this;
+    return new Promise(function(resolve,reject) {
+      self.chain.createReadStream()
+        .on('data',function(data) {
+          i++;
+        }).on('end',function() {
+          resolve(i);
+         }).on('error',function(error) {
+           console.log(error)
+           reject(error);
+         });
+    });
+ }
   getLastBlock() {
     let i=0;
     let last_block=null;
@@ -143,7 +159,7 @@ class Blockchain{
         self.chain.createReadStream()
           .on('data',function(data) {
             blocks.push(JSON.parse(data.value));
-          }).on('close',function() {
+          }).on('end',function() {
             console.log('# of blocks in chain',blocks.length);
             resolve(blocks);
           }).on('error',function(error) {
