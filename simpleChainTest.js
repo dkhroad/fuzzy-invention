@@ -15,28 +15,39 @@ array.reduce((promiseChain,i) => {
     )
   );
 }, Promise.resolve([])).then(allDone => {
-      console.log('all done');
-      // blockchain.showAllBlocks();
-      blockchain.validateChain();
+  console.log('all done');
+  blockchain.validateChain()
+    .then(errorLog => {
+      if (errorLog.size>0) {
+        console.log('Block errors = ' + errorLog.size);
+        console.log('Blocks: ', errorLog);
+      } else {
+        console.log('No errors detected');
+      }
+    }).then(() => {
+      // induce errors by chainging block data
+      console.log('Inducing errors on block 2,4,7');
+      let induceErrorBlocks = [2,4,7];
+      let allDone = induceErrorBlocks.map(i => {
+        return blockchain.getBlock(i).then(block => {
+          block.body = 'induce chain error';
+          blockchain.chain.put(i,JSON.stringify(block));
+        });
+      });
+      console.log(allDone);
+      Promise.all(allDone).then(() => {
+        blockchain.validateChain()
+          .then(errorLog => {
+            if (errorLog.size>0) {
+              console.log('Block errors = ' + errorLog.size);
+              console.log('Blocks: ', errorLog);
+            } else {
+              console.log('*No errors detected*');
+            }
+          })
+      })
+    });
 });
 
 
 
-// induce errors by chainging block data
-/*
-console.log('Inducing errors on block 2,4,7');
-let induceErrorBlocks = [2,4,7];
-induceErrorBlocks.map(i => {
-  return Promise.all(blockchain.getBlock(induceErrorBlocks[i])
-    .then((block) => {
-      block.body = 'induce chain error';
-      return block;
-    }).then((block) => {
-      blockchain.chain.put(block.height,JSON.stringify(block));
-    })
-  );
-}).then(() => {
-  // validate blockchain again. The chain should fail with blocks 2,4,7
-  blockchain.validateChain();
-}
-*/

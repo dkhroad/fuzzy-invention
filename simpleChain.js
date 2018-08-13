@@ -143,6 +143,7 @@ class Blockchain{
       block.hash = '';
       // generate block hash
       let validBlockHash = SHA256(JSON.stringify(block)).toString();
+      block.hash = blockHash; // leave the block in its original state
       // Compare
       if (blockHash===validBlockHash) {
         return true;
@@ -171,35 +172,64 @@ class Blockchain{
 
    // Validate blockchain
     validateChain(){
-      let errorLog = [];
-      let i=0;
-      let previousBlock=null
+      let errorLog = new Set();
       let self=this;
+      let previousBlock=null;
+      let currentBlock=null;
+      return new Promise((resolve,reject) => {
+
+        self.genesisBlockPromise.then(() => {
+          console.log(self.currentHeight);
+
+          for (let i=1;i <= self.currentHeight; i++) {
+            this.chain.get(i)
+              .then(value => {
+                currentBlock = JSON.parse(value);
+                if (!self.validateBlock(currentBlock)){
+                  errorLog.add(currentBlock.height);
+                }
+                if (previousBlock) {
+                  if (currentBlock.previousBlockHash !== previousBlock.hash) {
+                    errorLog.add(previousBlock.height);
+                  }
+                }
+                previousBlock = currentBlock;
+                if (i == this.currentHeight) {
+                  resolve(errorLog);
+                }
+              }).catch(error => {
+                reject(error);
+              });
+          }
+        });
+      });
+        /*
       this.chain.createValueStream().on('data', function(block) {
         i++;
         // validate block
-        if (!self.validateBlock(JSON.parse(block))){
-          errorLog.push(i);
+        block = JSON.parse(block);
+        console.log(block.height,errorLog);
+        if (!self.validateBlock(block)){
+          errorLog.push(block.height);
         }
         // compare blocks hash link
         if (previousBlock) {
           if (block.previousBlockHash !== previousBlock.hash) {
-            errorLog.push(i-1);
+            // errorLog.push(previousBlock.height);
           }
-        } else if (i > 1) { // there must exist previous block
-            errorLog.push(i);
-        }
+        } 
         previousBlock = block;
       }).on('error', function(err) {
           return console.log('Unable to read data stream!', err)
       }).on('close',function() {
         if (errorLog.length>0) {
           console.log('Block errors = ' + errorLog.length);
-          console.log('Blocks: '+errorLog);
+          console.log('Blocks: ', errorLog);
         } else {
           console.log('No errors detected');
         }
       });
+      */
     }
 
   showAllBlocks() {
@@ -231,6 +261,13 @@ let bc = new Blockchain();
       bc.showAllBlocks();
 });
 
+bc.validateChain().then(errorLog => {
+        if (errorLog.length>0) {
+          console.log('Block errors = ' + errorLog.length);
+          console.log('Blocks: ', errorLog);
+        } else {
+          console.log('No errors detected');
+        }
+});
+
 */ 
-
-
