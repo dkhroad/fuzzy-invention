@@ -190,6 +190,7 @@ class Blockchain{
                 }
                 if (previousBlock) {
                   if (currentBlock.previousBlockHash !== previousBlock.hash) {
+                    console.log('previousBlock hash doesnt match',currentBlock,previousBlock);
                     errorLog.add(previousBlock.height);
                   }
                 }
@@ -203,33 +204,6 @@ class Blockchain{
           }
         });
       });
-        /*
-      this.chain.createValueStream().on('data', function(block) {
-        i++;
-        // validate block
-        block = JSON.parse(block);
-        console.log(block.height,errorLog);
-        if (!self.validateBlock(block)){
-          errorLog.push(block.height);
-        }
-        // compare blocks hash link
-        if (previousBlock) {
-          if (block.previousBlockHash !== previousBlock.hash) {
-            // errorLog.push(previousBlock.height);
-          }
-        } 
-        previousBlock = block;
-      }).on('error', function(err) {
-          return console.log('Unable to read data stream!', err)
-      }).on('close',function() {
-        if (errorLog.length>0) {
-          console.log('Block errors = ' + errorLog.length);
-          console.log('Blocks: ', errorLog);
-        } else {
-          console.log('No errors detected');
-        }
-      });
-      */
     }
 
   showAllBlocks() {
