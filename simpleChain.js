@@ -49,7 +49,7 @@ class Blockchain{
             gBlock.height = 1;
             gBlock.time = new Date().getTime().toString().slice(0,-3);
             gBlock.hash = SHA256(JSON.stringify(gBlock)).toString();
-            self.chain.put(gBlock.height,JSON.stringify(gBlock));
+            self.chain.put(gBlock.height.toString(),JSON.stringify(gBlock));
           };
         }).then(resp => {
           console.log('genesis block added');
@@ -70,16 +70,14 @@ class Blockchain{
         .then((lastBlock) => {
           if (lastBlock == null) {
             throw new Error('missing genesis block');
-            //newBlock.height = 1;
-          } else {
-            console.log('lastBlock: ',lastBlock);
-            newBlock.previousBlockHash = lastBlock.hash;
-            newBlock.height = lastBlock.height + 1;
-          }
+          } 
+          console.log('lastBlock: ',lastBlock.height);
+          newBlock.previousBlockHash = lastBlock.hash;
+          newBlock.height = lastBlock.height + 1;
           newBlock.time = new Date().getTime().toString().slice(0,-3);
           newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
-          console.log('adding block to chain',newBlock);
-          self.chain.put(newBlock.height,JSON.stringify(newBlock));
+          console.log('adding block to chain',newBlock.height);
+          self.chain.put(newBlock.height.toString(),JSON.stringify(newBlock));
       }).then(() => {
         resolve([]);
       }).catch((err) => {
@@ -101,10 +99,11 @@ class Blockchain{
     let last_block=null;
     let self = this;
     return new Promise(function(resolve,reject) {
-      self.chain.createReadStream()
+      self.chain.createReadStream({reverse: true,limit:1})
         .on('data',function(data) {
           i++;
           last_block = data.value;
+          console.log('===',data.key,data.value);
         }).on('end',function() {
           if (last_block) {
             console.log('resolving to',last_block);
@@ -144,7 +143,7 @@ class Blockchain{
         self.chain.createReadStream()
           .on('data',function(data) {
             blocks.push(JSON.parse(data.value));
-          }).on('end',function() {
+          }).on('close',function() {
             console.log('# of blocks in chain',blocks.length);
             resolve(blocks);
           }).on('error',function(error) {
