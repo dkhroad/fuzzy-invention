@@ -27,44 +27,66 @@ class Block{
 class Blockchain{
   constructor() {
     this.chain = level(chainDB);
-    this.addGenesisBlock();
+    this.genesisBlockPromise = this.addGenesisBlock();
   }
 
   addGenesisBlock() {
     let self = this;
-    this.getBlock(1)
-    .then((block) => {
-        if (block.height != 1) {
-          console.log(typeof block.height);
-          console.log(block.height);
-          console.log('**Corrupt Genesis block',block);
-          throw new Error('--Corrupt genesis block');
-        }
-      }).catch((err) => {
-        if (err.notFound) {
-          self.addBlock(new Block("First block in the chain - Genesis block"));
-        }
-      });
+    return new Promise((resolve,reject) => {
+      this.getBlock(1).
+        then(block => {
+          if (block.height != 1 || block.previousBlockHash) {
+            console.log('**Corrupt Genesis block',block);
+            reject('--Corrupt genesis block');
+          } else{
+            console.log('genesis block already exists');
+            resolve([]);
+          }
+        }).catch(err => {
+          if (err.notFound) {
+            console.log('adding genesis block...');
+            let gBlock = new Block("First block in the chain - Genesis block");
+            gBlock.height = 1;
+            gBlock.time = new Date().getTime().toString().slice(0,-3);
+            gBlock.hash = SHA256(JSON.stringify(gBlock)).toString();
+            self.chain.put(gBlock.height,JSON.stringify(gBlock));
+          };
+        }).then(resp => {
+          console.log('genesis block added');
+          resolve([]);
+        }).catch(err => {
+          reject(err);
+        });
+    });
   }
+
+  
   // Add new block
   addBlock(newBlock){
     let self = this;
-    this.getLastBlock()
-      .then((lastBlock) => {
-        if (lastBlock == null) {
-          newBlock.height = 1;
-        } else {
-          console.log('lastBlock: ',lastBlock);
-          newBlock.previousBlockHash = lastBlock.hash;
-          newBlock.height = lastBlock.height + 1;
-        }
-        newBlock.time = new Date().getTime().toString().slice(0,-3);
-        newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
-        console.log(newBlock);
-        self.chain.put(newBlock.height,JSON.stringify(newBlock));
+    return new Promise((resolve,reject) => {
+      self.genesisBlockPromise
+        .then(() => self.getLastBlock())
+        .then((lastBlock) => {
+          if (lastBlock == null) {
+            throw new Error('missing genesis block');
+            //newBlock.height = 1;
+          } else {
+            console.log('lastBlock: ',lastBlock);
+            newBlock.previousBlockHash = lastBlock.hash;
+            newBlock.height = lastBlock.height + 1;
+          }
+          newBlock.time = new Date().getTime().toString().slice(0,-3);
+          newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
+          console.log('adding block to chain',newBlock);
+          self.chain.put(newBlock.height,JSON.stringify(newBlock));
+      }).then(() => {
+        resolve([]);
       }).catch((err) => {
         console.log(err);
+        reject(err);
       });
+    });
   }
 
  getBlock(blockheight) {
@@ -83,7 +105,7 @@ class Blockchain{
         .on('data',function(data) {
           i++;
           last_block = data.value;
-        }).on('close',function() {
+        }).on('end',function() {
           if (last_block) {
             console.log('resolving to',last_block);
           } else {
@@ -122,7 +144,8 @@ class Blockchain{
         self.chain.createReadStream()
           .on('data',function(data) {
             blocks.push(JSON.parse(data.value));
-          }).on('close',function() {
+          }).on('end',function() {
+            console.log('# of blocks in chain',blocks.length);
             resolve(blocks);
           }).on('error',function(error) {
             console.log(error)
@@ -155,19 +178,6 @@ class Blockchain{
       }).on('error', function(err) {
           return console.log('Unable to read data stream!', err)
       }).on('close',function() {
-        /*
-      for (var i = 0; i < this.chain.length-1; i++) {
-        // validate block
-        if (!this.validateBlock(i))
-          errorLog.push(i);
-        // compare blocks hash link
-        let blockHash = this.chain[i].hash;
-        let previousHash = this.chain[i+1].previousBlockHash;
-        if (blockHash!==previousHash) {
-          errorLog.push(i);
-        }
-      }
-      */
         if (errorLog.length>0) {
           console.log('Block errors = ' + errorLog.length);
           console.log('Blocks: '+errorLog);
@@ -192,8 +202,20 @@ module.exports = {
   Block,
   Blockchain
 }
-
+  /*
 let bc = new Blockchain();
-bc.addBlock(new Block('block no 1'));
-bc.addBlock(new Block('block no 2'));
+
+[1,2,3].reduce((promiseChain,i) => {
+  return promiseChain.then(chainResults => 
+    bc.addBlock(new Block('test Block ' + i)).then(currentResult => 
+      [...chainResults, currentResult ]
+    )
+  );
+}, Promise.resolve([])).then(allDone => {
+      console.log('all done');
+      bc.showAllBlocks();
+});
+
+*/ 
+
 
