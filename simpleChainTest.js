@@ -28,12 +28,13 @@ array.reduce((promiseChain,i) => {
       // induce errors by chainging block data
       console.log('Inducing errors on block 2,4,7');
       let induceErrorBlocks = [2,4,7];
-      let allDone = induceErrorBlocks.map(i => {
-        return blockchain.getBlock(i).then(block => {
-          block.body = 'induce chain error';
-          blockchain.chain.put(i,JSON.stringify(block));
-        });
-      });
+      let allDone= induceErrorBlocks.map(i => {
+        return blockchain.getBlock(i)
+          .then(block => {
+            block.body = 'induce chain error';
+            blockchain.chain.put(blockchain.lexi(i),JSON.stringify(block));
+          });
+      })
       console.log(allDone);
       Promise.all(allDone).then(() => {
         blockchain.validateChain()

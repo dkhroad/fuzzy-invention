@@ -12,6 +12,6 @@ let induceErrorBlocks = [2,4,7];
 induceErrorBlocks.map(i => {
   blockchain.getBlock(i).then(block => {
     block.body = 'induce chain error';
-    blockchain.chain.put(i,JSON.stringify(block));
+    blockchain.chain.put(blockchain.lexi(i),JSON.stringify(block));
   })
 });

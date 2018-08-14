@@ -5,7 +5,6 @@
 const SHA256 = require('crypto-js/sha256');
 const level = require('level');
 const chainDB = './chaindata';
-
 /* ===== Block Class ==============================
 |  Class with a constructor for block 			   |
 |  ===============================================*/
@@ -31,6 +30,12 @@ class Blockchain{
     this.genesisBlockPromise = this.addGenesisBlock();
   }
 
+
+  lexi(n) {
+    let ln = ("0000" + n).substr(-4,4);
+    console.log('lexi: n',n,'ln',ln);
+    return ln;
+  }
   addGenesisBlock() {
     let self = this;
     return new Promise((resolve,reject) => {
@@ -42,7 +47,7 @@ class Blockchain{
             gBlock.height = 1;
             gBlock.time = new Date().getTime().toString().slice(0,-3);
             gBlock.hash = SHA256(JSON.stringify(gBlock)).toString();
-            self.chain.put(gBlock.height.toString(),JSON.stringify(gBlock));
+            self.chain.put(self.lexi(gBlock.height),JSON.stringify(gBlock));
           } else{
             console.log('genesis block already exists',height);
             self.currentHeight = height;            
@@ -76,7 +81,7 @@ class Blockchain{
           newBlock.time = new Date().getTime().toString().slice(0,-3);
           newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
           console.log('adding block to chain',newBlock.height,self.currentHeight);
-          self.chain.put(newBlock.height,JSON.stringify(newBlock));
+          self.chain.put(self.lexi(newBlock.height),JSON.stringify(newBlock));
       }).then(() => {
         self.currentHeight++;
         console.log('block added',self.currentHeight);
@@ -89,7 +94,7 @@ class Blockchain{
   }
 
  getBlock(blockheight) {
-   return this.chain.get(blockheight)
+   return this.chain.get(this.lexi(blockheight))
      .then((block) => {
        return JSON.parse(block);
      });
@@ -176,32 +181,21 @@ class Blockchain{
       let self=this;
       let previousBlock=null;
       let currentBlock=null;
-      return new Promise((resolve,reject) => {
-
-        self.genesisBlockPromise.then(() => {
-          console.log(self.currentHeight);
-
-          for (let i=1;i <= self.currentHeight; i++) {
-            this.chain.get(i)
-              .then(value => {
-                currentBlock = JSON.parse(value);
-                if (!self.validateBlock(currentBlock)){
-                  errorLog.add(currentBlock.height);
-                }
-                if (previousBlock) {
-                  if (currentBlock.previousBlockHash !== previousBlock.hash) {
-                    console.log('previousBlock hash doesnt match',currentBlock,previousBlock);
-                    errorLog.add(previousBlock.height);
-                  }
-                }
-                previousBlock = currentBlock;
-                if (i == this.currentHeight) {
-                  resolve(errorLog);
-                }
-              }).catch(error => {
-                reject(error);
-              });
-          }
+      return new Promise(resolve => {
+        this.getAllBlocks().then(blocks => {
+          blocks.reduce((prev,curr) => {
+            if (!self.validateBlock(curr)){
+              errorLog.add(curr.height);
+            }
+            if (prev) {
+              if (curr.previousBlockHash !== prev.hash) {
+                console.log('previousBlock hash doesnt match',curr,prev);
+                errorLog.add(prev.height);
+              }
+            }
+            return curr;
+          },null);
+          resolve(errorLog);
         });
       });
     }
