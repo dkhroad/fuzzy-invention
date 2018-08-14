@@ -15,7 +15,6 @@ array.reduce((promiseChain,i) => {
     )
   );
 }, Promise.resolve([])).then(allDone => {
-  console.log('all done');
   blockchain.validateChain()
     .then(errorLog => {
       if (errorLog.size>0) {
@@ -35,7 +34,6 @@ array.reduce((promiseChain,i) => {
             blockchain.chain.put(blockchain.lexi(i),JSON.stringify(block));
           });
       })
-      console.log(allDone);
       Promise.all(allDone).then(() => {
         blockchain.validateChain()
           .then(errorLog => {
