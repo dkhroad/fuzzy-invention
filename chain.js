@@ -7,3 +7,4 @@ let blockchain = new Blockchain();
 
 blockchain.showAllBlocks();
 blockchain.validateChain();
+blockchain.getBlockHeight().then(height => console.log(height));
