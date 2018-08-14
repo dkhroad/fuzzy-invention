@@ -27,6 +27,38 @@ npm install level --save
 
 ## Testing
 
+The following command runs the tests from the file `simpleChainTest.js`
+```
+npm test
+```
+
+simpleChainTest.js files contains same tests as suggested in the
+original testing instructions below with the following minor modifications.
+
+  * In order to avoid manually copy the test code in the nodejs repl, 
+    it is consistent and less error prone run tests from a file.
+  * Running these tests from a file actually uncovered a few race
+    condition bugs that are not evident when test code is manually 
+    copied in the repl. The reason being asynchronous nature all get/put calls
+    to the persistent storage. 
+  * Running tests from a file, required one minor change to `validateChain`
+    method. It returns the corrupt blocks in a set as a resolved promise argument
+    as show below.
+
+   ```
+        blockchain.validateChain()
+          .then(errorLog => {
+            if (errorLog.size>0) {
+              console.log('Block errors = ' + errorLog.size);
+              console.log('Blocks: ', errorLog);
+            } else {
+              console.log('*No errors detected*');
+            }
+          })
+
+   ```
+### Original Testing Instructions
+
 To test code:
 1: Open a command prompt or shell terminal after install node.js.
 2: Enter a node session, also known as REPL (Read-Evaluate-Print-Loop).
