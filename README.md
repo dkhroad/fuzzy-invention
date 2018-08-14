@@ -32,15 +32,16 @@ The following command runs the tests from the file `simpleChainTest.js`
 npm test
 ```
 
-simpleChainTest.js files contains same tests as suggested in the
+simpleChainTest.js file contains the same tests as suggested in the
 original testing instructions below with the following minor modifications.
 
-  * In order to avoid manually copy the test code in the nodejs repl, 
-    it is consistent and less error prone run tests from a file.
+  * In order to avoid manually copying the test code in the nodejs repl, 
+    I found testing to be consistent and less error prone when tests are
+    run directly from a file.
   * Running these tests from a file actually uncovered a few race
-    condition bugs that are not evident when test code is manually 
-    copied in the repl. The reason being asynchronous nature all get/put calls
-    to the persistent storage. 
+    condition bugs that were not evident when testing code by manually 
+    copying test code snippets in the repl. The reason being asynchronous 
+    nature of leveldb get/put calls.
   * Running tests from a file, required one minor change to `validateChain`
     method. It returns the corrupt blocks in a set as a resolved promise argument
     as show below.
