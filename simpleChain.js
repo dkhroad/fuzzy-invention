@@ -80,6 +80,7 @@ class Blockchain{
       // most of the time this will be a fulfilled promise.
       // so it won't be inefficient to check it before adding
       // a new block
+      let newBlockHeight;
       self.genesisBlockPromise 
         .then(() => self.getLastBlock())
         .then((lastBlock) => {
@@ -90,9 +91,10 @@ class Blockchain{
           newBlock.height = lastBlock.height + 1;
           newBlock.time = new Date().getTime().toString().slice(0,-3);
           newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
+          newBlockHeight = newBlock.height;
           self.chain.put(self.lexi(newBlock.height),JSON.stringify(newBlock));
         }).then(() => {
-          resolve([]);
+          resolve(newBlockHeight);
         }).catch((err) => {
           console.log(err);
           reject(err);

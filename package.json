@@ -1,15 +1,16 @@
 {
-  "name": "project_2",
+  "name": "RESTful Web API for the private blockchain",
   "version": "1.0.0",
-  "description": "Udacity private blockchain project",
-  "main": "simpleChain.js",
+  "description": "RESTful Web API for the private blockchain project",
+  "main": "server.js",
   "scripts": {
-    "test": "node simpleChainTest.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "crypto-js": "^3.1.9-1",
+    "hapi": "^17.5.4",
     "level": "^4.0.0"
   }
 }
