@@ -1,6 +1,31 @@
-# Blockchain Data
+# RESTful Web API with hapijs Framework
 
-Blockchain has the potential to change the way that the world approaches data. Develop Blockchain skills by understanding the data model behind Blockchain by developing your own simplified private blockchain.
+This web service provides the following REST API for a private blockchain
+using hapijs framework.
+The app is configured to run on the localhost on port 8000
+
+## API Endpoints 
+
+1.Get a block at the given height: 
+
+  GET /block/{BLOCK_HEIGHT}
+
+  Returns a block at block height specified by parameter BLOCK_HEIGHT.
+  The block content is returned in JSON format.
+  If BLOCK_HEIGHT is invalid, response 400 will be returned.
+
+2. Create a new block using 
+
+  POST /block
+  Content-Type: application/json
+  Request body: {"body": "block body content"}
+
+  Creates a new block in the blockchain. Request body must contains the 
+  key 'body' with the value with which a new block is to be created.
+
+  Return the content of newly created block in JSON format.
+
+See the [testing section](#Testing)  for usage details.
 
 ## Getting Started
 
@@ -12,83 +37,58 @@ Installing Node and NPM is pretty straightforward using the installer package av
 
 ### Configuring your project
 
-- Use NPM to initialize your project and create package.json to store project dependencies.
+- Use NPM to initialize your project and install the necessary dependencies.
 ```
-npm init
+npm install  
 ```
-- Install crypto-js with --save flag to save dependency to our package.json file
-```
-npm install crypto-js --save
-```
-- Install level with --save flag
-```
-npm install level --save
-```
+
+This will install the following package dependencies: 
+- (crypto-js)[https://github.com/brix/crypto-js]
+- (nodejs leveldb wrapper)[https://github.com/Level/level]
+- (hapijs framework)[https://hapijs.com]
+-
+
+## Running The Server
+
+`node index.js`
+
+Runs the web service on the localhost on port 8000
 
 ## Testing
 
-The following command runs the tests from the file `simpleChainTest.js`
-```
-npm test
-```
+The web-service can be tested using `curl` command.
 
-simpleChainTest.js file contains the same tests as suggested in the
-original testing instructions below with the following minor modifications.
+1. GET /block/{BLOCK_HEIGHT}
 
-  * In order to avoid manually copying the test code in the nodejs repl, 
-    I found testing to be consistent and less error prone when tests are
-    run directly from a file.
-  * Running these tests from a file actually uncovered a few race
-    condition bugs that were not evident when testing code by manually 
-    copying test code snippets in the repl. The reason being asynchronous 
-    nature of leveldb get/put calls.
-  * Running tests from a file, required one minor change to `validateChain`
-    method. It returns the corrupt blocks in a set as a resolved promise argument
-    as show below.
+    * Request:
+    ```
+    curl   http://localhost:8000/block/31
+    ```
 
-   ```
-        blockchain.validateChain()
-          .then(errorLog => {
-            if (errorLog.size>0) {
-              console.log('Block errors = ' + errorLog.size);
-              console.log('Blocks: ', errorLog);
-            } else {
-              console.log('*No errors detected*');
-            }
-          })
+    * Response:
 
-   ```
-### Original Testing Instructions
+    ```
+    {"hash":"3e4fbeeb487c3e8c7b49b49073e01e85246166e5a1c08fd6cf7be369fb3db4c4","height":31,"body":"Testi
+    block with test string
+    data","time":"1536026335","previousBlockHash":"cecfd2273fe562af0c766832c314741ea28e8689c6f802f115c0e
+    ```
 
-To test code:
-1: Open a command prompt or shell terminal after install node.js.
-2: Enter a node session, also known as REPL (Read-Evaluate-Print-Loop).
-```
-node
-```
-3: Copy and paste your code into your node session
-4: Instantiate blockchain with blockchain variable
-```
-let blockchain = new Blockchain();
-```
-5: Generate 10 blocks using a for loop
-```
-for (var i = 0; i <= 10; i++) {
-  blockchain.addBlock(new Block("test data "+i));
-}
-```
-6: Validate blockchain
-```
-blockchain.validateChain();
-```
-7: Induce errors by changing block data
-```
-let inducedErrorBlocks = [2,4,7];
-for (var i = 0; i < inducedErrorBlocks.length; i++) {
-  blockchain.chain[inducedErrorBlocks[i]].data='induced chain error';
-}
-```
-8: Validate blockchain. The chain should now fail with blocks 2,4, and 7.
-```
-blockchain.validateChain();
-```
+2. POST /block
+   Content-Type: application/json
+   Request body: {"body": "block body content"}
+
+
+  * Request:
+  ```
+  curl -X "POST" "http://localhost:8000/block" \
+       -H 'Content-Type: application/json' \
+       -d $'{
+    "body": "Testing block with test string data"
+  }'
+  ```
+
+  * Response:
+  ```
+  {"hash":"3f66086da32e814411c1cba0c0d86e1e26d07fcb621b78984c6061f60bcfdbf9","height":32,"body":"Testig block with test string data","time":"1536026396","previousBlockHash":"3e4fbeeb487c3e8c7b49b49073e01e85246166e5a1c08fd6cf7be"}
+  ```
+

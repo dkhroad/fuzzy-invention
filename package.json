@@ -2,7 +2,7 @@
   "name": "RESTful Web API for the private blockchain",
   "version": "1.0.0",
   "description": "RESTful Web API for the private blockchain project",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
