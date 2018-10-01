@@ -5,6 +5,7 @@
 const SHA256 = require('crypto-js/sha256');
 const level = require('level');
 const chainDB = './chaindata';
+
 /* ===== Block Class ==============================
 |  Class with a constructor for block 			   |
 |  ===============================================*/
@@ -24,11 +25,10 @@ class Block{
 |  ================================================*/
 
 class Blockchain{
-  constructor() {
-    this.chain = level(chainDB);
-
+  constructor(db=chainDB) {
+    this.chain = level(db);
     // ensures genesis block is added first if missing
-    this.genesisBlockPromise = this.addGenesisBlock();
+    this.genesisBlockAdded = null;
   }
 
   /*========================================
@@ -48,8 +48,28 @@ class Blockchain{
    a race condition does occur when multiple blocks are added
    in a quick succession after creating Blockchain instance.
    ========================================================*/
-  addGenesisBlock() {
+  async addGenesisBlockIfMissing() {
     let self = this;
+    try {
+      if (this.genesisBlockAdded) {
+        return;
+      }
+      console.log('adding genesis block');
+      let height = await this.getBlockHeight();
+      if (height == -1) { // add genesis block 
+        let gBlock = new Block("First block in the chain - Genesis block");
+        gBlock.height = 0; 
+        gBlock.time = new Date().getTime().toString().slice(0,-3);
+        gBlock.hash = SHA256(JSON.stringify(gBlock)).toString();
+        await self.chain.put(self.lexi(gBlock.height),JSON.stringify(gBlock));
+        this.genesisBlockAdded = true;
+        console.log('added genesis block');
+      }
+    } catch (err) {
+      console.log('Failed to add genesis block: ' + err);
+    }
+
+      /**
     return new Promise((resolve,reject) => {
       this.getBlockHeight().
         then(height => {
@@ -69,6 +89,7 @@ class Blockchain{
           reject(err);
         });
     });
+    */
   }
 
 
@@ -81,7 +102,7 @@ class Blockchain{
       // so it won't be inefficient to check it before adding
       // a new block
       let newBlockHeight;
-      self.genesisBlockPromise 
+      self.addGenesisBlockIfMissing()
         .then(() => self.getLastBlock())
         .then((lastBlock) => {
           if (lastBlock == null) {
@@ -103,11 +124,9 @@ class Blockchain{
   }
 
   // get a block at the given blockheight
-  getBlock(blockheight) {
-    return this.chain.get(this.lexi(blockheight))
-      .then((block) => {
-        return JSON.parse(block);
-      });
+  async getBlock(blockheight) {
+    let block = await this.chain.get(this.lexi(blockheight))
+    return JSON.parse(block);
   }
 
   getLastBlock() {
@@ -128,22 +147,19 @@ class Blockchain{
   }
   // compute the current block height
   // by traversing the blockchain
-  getBlockHeight() {
-    let i=0;
+  async getBlockHeight() {
+    let i=-1;
     let self = this;
     return new Promise(function(resolve,reject) {
-      self.chain.createReadStream()
-        .on('data',function(data) {
-          i++;
-        }).on('end',function() {
-          if (i > 0) {
-            i--;
-          }
-          resolve(i);
-        }).on('error',function(error) {
-          console.log(error)
-          reject(error);
-        });
+     self.chain.createReadStream()
+      .on('data',function(data) {
+        i++;
+      }).on('end',function() {
+        resolve(i);
+      }).on('error',function(error) {
+        console.log(error)
+        reject(error);
+      });
     });
   }
 
@@ -222,6 +238,14 @@ class Blockchain{
   }
 }
 
+
+class BlockchainFactory {
+  static async create(db) {
+    let blockchain = new Blockchain(db);
+    await blockchain.addGenesisBlockIfMissing();
+    return blockchain;
+  }
+}
 module.exports = { 
   Block,
   Blockchain
