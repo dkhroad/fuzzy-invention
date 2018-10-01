@@ -68,8 +68,8 @@ describe('Blockchain', function() {
       for (let i=0;i<=10;i++) {
          cbh = await blockchain.addBlock(new Block('Test block - #'+i));
       }
-      console.log(cbh);
-      dumpChain(blockchain);
+      // console.log(cbh);
+      // dumpChain(blockchain);
       let lastBlock = await blockchain.getLastBlock();
       expect(lastBlock.body,'block content').to.equal('Test block - #10');
 
