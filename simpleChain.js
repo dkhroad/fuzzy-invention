@@ -28,7 +28,7 @@ class Blockchain{
   constructor(db=chainDB) {
     this.chain = level(db);
     // ensures genesis block is added first if missing
-    this.genesisBlockAdded = null;
+    this.genesisBlockAdded = false;
   }
 
   /*========================================
@@ -54,73 +54,40 @@ class Blockchain{
       if (this.genesisBlockAdded) {
         return;
       }
-      console.log('adding genesis block');
       let height = await this.getBlockHeight();
       if (height == -1) { // add genesis block 
         let gBlock = new Block("First block in the chain - Genesis block");
-        gBlock.height = 0; 
+        gBlock.height = 0;
         gBlock.time = new Date().getTime().toString().slice(0,-3);
         gBlock.hash = SHA256(JSON.stringify(gBlock)).toString();
         await self.chain.put(self.lexi(gBlock.height),JSON.stringify(gBlock));
         this.genesisBlockAdded = true;
-        console.log('added genesis block');
       }
     } catch (err) {
       console.log('Failed to add genesis block: ' + err);
     }
-
-      /**
-    return new Promise((resolve,reject) => {
-      this.getBlockHeight().
-        then(height => {
-          if (height === 0) { // add genesis block
-            let gBlock = new Block("First block in the chain - Genesis block");
-            gBlock.height = 0; 
-            gBlock.time = new Date().getTime().toString().slice(0,-3);
-            gBlock.hash = SHA256(JSON.stringify(gBlock)).toString();
-            self.chain.put(self.lexi(gBlock.height),JSON.stringify(gBlock));
-          } else{
-            //genesis block already exists
-          }
-        }).then(resp => {
-          // genesis block is now persisted successfully. 
-          resolve([]);
-        }).catch(err => {
-          reject(err);
-        });
-    });
-    */
   }
 
 
   // Add new block
-  addBlock(newBlock){
+  async addBlock(newBlock){
     let self = this;
-    return new Promise((resolve,reject) => {
-      // ensure genesis block is added before adding new blocks.
-      // most of the time this will be a fulfilled promise.
-      // so it won't be inefficient to check it before adding
-      // a new block
-      let newBlockHeight;
-      self.addGenesisBlockIfMissing()
-        .then(() => self.getLastBlock())
-        .then((lastBlock) => {
-          if (lastBlock == null) {
-            throw new Error('missing genesis block');
-          } 
-          newBlock.previousBlockHash = lastBlock.hash;
-          newBlock.height = lastBlock.height + 1;
-          newBlock.time = new Date().getTime().toString().slice(0,-3);
-          newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
-          newBlockHeight = newBlock.height;
-          self.chain.put(self.lexi(newBlock.height),JSON.stringify(newBlock));
-        }).then(() => {
-          resolve(newBlockHeight);
-        }).catch((err) => {
-          console.log(err);
-          reject(err);
-        });
-    });
+
+    try {
+      await self.addGenesisBlockIfMissing();
+      let lastBlock = await self.getLastBlock();
+      if (lastBlock == null) {
+        throw new Error('missing genesis block');
+      } 
+      newBlock.previousBlockHash = lastBlock.hash;
+      newBlock.height = lastBlock.height + 1 ;
+      newBlock.time = new Date().getTime().toString().slice(0,-3);
+      newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
+      await self.chain.put(self.lexi(newBlock.height),JSON.stringify(newBlock));
+      return newBlock.height;
+    }catch (err) {
+      console.log(err);
+    }
   }
 
   // get a block at the given blockheight
@@ -177,7 +144,7 @@ class Blockchain{
     if (blockHash===validBlockHash) {
       return true;
     } else {
-      console.log('Block #'+block.height+' invalid hash:\n'+blockHash+'<>'+validBlockHash);
+      // console.log('Block #'+block.height+' invalid hash:\n'+blockHash+'<>'+validBlockHash);
       return false;
     }
   }
