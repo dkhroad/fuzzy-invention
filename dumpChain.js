@@ -4,7 +4,11 @@ const {
 } = require('./simpleChain.js');
 
 // Instantiate blockchain with blockchain variable
-let blockchain = new Blockchain();
+console.log(process.env.NODE_ENV);
+const blockchain = process.env.NODE_ENV == 'test' ?
+  new Blockchain('./test/chain_test_data') : 
+  new Blockchain();
+
 let last_block;
 let i=0;
 blockchain.chain.createReadStream()
