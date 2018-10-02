@@ -20,7 +20,9 @@
   "devDependencies": {
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
+    "code": "^5.2.0",
     "del": "^3.0.0",
+    "lab": "^16.1.0",
     "mocha": "^5.2.0",
     "sinon": "^6.3.4"
   }
