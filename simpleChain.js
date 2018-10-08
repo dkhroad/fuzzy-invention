@@ -4,6 +4,7 @@
 
 const SHA256 = require('crypto-js/sha256');
 const level = require('level');
+const config = require('./env.json')[process.env.NODE_ENV || 'development']
 const chainDB = './chaindata';
 
 /* ===== Block Class ==============================
@@ -19,13 +20,42 @@ class Block{
       this.previousBlockHash = ""
   }
 }
+  /*
+class A {
+  constructor(fooVal) {
+    this.foo = fooVal;
+  }
+}
+class AFactory {
+  static async create() {
+    return new A(await Promise.resolve('fooval'));
+  }
+}
+(async function generate() {
+  const aObj = await AFactory.create();
+  console.log(aObj);
+})()
+*/
+
+/* 
+ * Blockchain factory class
+ */
+
+class BlockchainFactory {
+  static async create() {
+    let bc = new Blockchain();
+    await bc.addGenesisBlockIfMissing(); 
+    return bc;
+  }
+}
 
 /* ===== Blockchain Class ==========================
 |  Class with a constructor for new blockchain 		|
 |  ================================================*/
 
 class Blockchain{
-  constructor(db=chainDB) {
+  constructor(db=config.db) {
+    console.trace('opening db: ' + db);
     this.chain = level(db);
     // ensures genesis block is added first if missing
     this.genesisBlockAdded = false;
@@ -206,14 +236,8 @@ class Blockchain{
 }
 
 
-class BlockchainFactory {
-  static async create(db) {
-    let blockchain = new Blockchain(db);
-    await blockchain.addGenesisBlockIfMissing();
-    return blockchain;
-  }
-}
 module.exports = { 
   Block,
-  Blockchain
+  Blockchain,
+  BlockchainFactory
 }

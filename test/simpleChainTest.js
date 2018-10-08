@@ -1,10 +1,10 @@
 const { expect } = require('code');
 const Lab = require('lab');
 const { after, before, beforeEach, afterEach, describe, it } = exports.lab = Lab.script();
-const { Block, Blockchain } = require('../simpleChain.js');
+const { Block, Blockchain, BlockchainFactory } = require('../simpleChain.js');
+const config = require('../env.json')[process.env.NODE_ENV || 'test']
 const del = require('del');
 
-const chainTestDB = './test/chain_test_data'; 
 
 function dumpChain(bc) {
   let i=0;
@@ -18,12 +18,25 @@ function dumpChain(bc) {
     });
 }
 
+describe('BlockchainFactory', () => {
+  before(async () => {
+    blockchain =  await BlockchainFactory.create();
+  });
+  it('creates Blockchain instance with genesis block', async () => {
+    firstBlock = await blockchain.getBlock(0);
+    expect(firstBlock.body,'block content').to.include('Genesis block');
+  });
+  after(async () =>  {
+    await blockchain.chain.close();
+  });
+});
+
 describe('Blockchain', () =>  {
   let blockchain;
 
   beforeEach(async function() {
-    del.sync(chainTestDB);
-    blockchain = new Blockchain(chainTestDB); 
+    del.sync(config.db);
+    blockchain = new Blockchain(); 
   });
 
   afterEach(async function() {
