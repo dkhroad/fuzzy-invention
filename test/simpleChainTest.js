@@ -1,9 +1,7 @@
-var expect = require('chai').expect;
-
-const { 
-  Block, Blockchain 
-} = require('../simpleChain.js');
-
+const { expect } = require('code');
+const Lab = require('lab');
+const { after, before, beforeEach, afterEach, describe, it } = exports.lab = Lab.script();
+const { Block, Blockchain } = require('../simpleChain.js');
 const del = require('del');
 
 const chainTestDB = './test/chain_test_data'; 
@@ -20,7 +18,7 @@ function dumpChain(bc) {
     });
 }
 
-describe('Blockchain', function() {
+describe('Blockchain', () =>  {
   let blockchain;
 
   beforeEach(async function() {

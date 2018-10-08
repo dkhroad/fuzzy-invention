@@ -4,7 +4,7 @@
   "description": "RESTful Web API for the private blockchain project",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "lab -v"
   },
   "repository": {
     "type": "git",
