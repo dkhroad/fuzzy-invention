@@ -20,32 +20,23 @@ class Block{
       this.previousBlockHash = ""
   }
 }
-  /*
-class A {
-  constructor(fooVal) {
-    this.foo = fooVal;
-  }
-}
-class AFactory {
-  static async create() {
-    return new A(await Promise.resolve('fooval'));
-  }
-}
-(async function generate() {
-  const aObj = await AFactory.create();
-  console.log(aObj);
-})()
-*/
-
 /* 
  * Blockchain factory class
  */
-
+let _blockchain = null;
 class BlockchainFactory {
   static async create() {
-    let bc = new Blockchain();
-    await bc.addGenesisBlockIfMissing(); 
-    return bc;
+    if (!_blockchain) {
+      _blockchain = new Blockchain();
+      console.log('adding genesis block');
+      await _blockchain.addGenesisBlockIfMissing(); 
+      console.log('done adding genesisblock');
+      console.log('1');
+      return Promise.resolve(_blockchain);
+    } else {  
+      console.log('2');
+      return Promise.resolve(_blockchain);
+    }
   }
 }
 
@@ -55,7 +46,7 @@ class BlockchainFactory {
 
 class Blockchain{
   constructor(db=config.db) {
-    console.trace('opening db: ' + db);
+    console.log('opening db: ' + db);
     this.chain = level(db);
     // ensures genesis block is added first if missing
     this.genesisBlockAdded = false;
@@ -86,6 +77,7 @@ class Blockchain{
       }
       let height = await this.getBlockHeight();
       if (height == -1) { // add genesis block 
+        console.trace('adding genesis block');
         let gBlock = new Block("First block in the chain - Genesis block");
         gBlock.height = 0;
         gBlock.time = new Date().getTime().toString().slice(0,-3);
@@ -98,8 +90,6 @@ class Blockchain{
     }
   }
 
-
-  // Add new block
   async addBlock(newBlock){
     let self = this;
 
@@ -114,6 +104,7 @@ class Blockchain{
       newBlock.time = new Date().getTime().toString().slice(0,-3);
       newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
       await self.chain.put(self.lexi(newBlock.height),JSON.stringify(newBlock));
+      console.log('added block at height: '+ newBlock.height);
       return newBlock.height;
     }catch (err) {
       console.log(err);

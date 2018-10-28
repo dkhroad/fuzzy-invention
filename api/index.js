@@ -1,17 +1,12 @@
 const Joi = require('joi');
-const { 
-  Block, Blockchain 
-} = require('../simpleChain.js');
+const { Block, BlockchainFactory } = require('../simpleChain.js');
 
 
-console.log(process.env.NODE_ENV);
-const blockchain = process.env.NODE_ENV == 'test' ?
-  new Blockchain('./test/chain_test_data') : 
-  new Blockchain();
 
 module.exports = { 
   name: "BlockchainApiPlugin",
   register: async (server,options) => {
+    let blockchain = options.blockchain;
     server.route([
       {
         method: 'GET',
@@ -26,12 +21,12 @@ module.exports = {
         handler: async (request, h) => {
           let bh = parseInt(request.params.height);
 
-          console.log(`getting block at height: ${bh}`);
           let lb = await blockchain.getLastBlock();
+          console.log(`getting block at height: ${bh}`);
           if (bh > lb.height) {
             var err = {
               error: 'Bad Request',
-              message: 'Invalid block height'
+              message: 'Invalid block height '+ lb.height
             }
             return h.response(err).code(400);
           } else {

@@ -22,10 +22,17 @@ describe('BlockchainFactory', () => {
   before(async () => {
     blockchain =  await BlockchainFactory.create();
   });
-  it('creates Blockchain instance with genesis block', async () => {
-    firstBlock = await blockchain.getBlock(0);
-    expect(firstBlock.body,'block content').to.include('Genesis block');
-  });
+  describe(".create", () => { 
+    it('creates Blockchain instance with genesis block', async () => {
+      firstBlock = await blockchain.getBlock(0);
+      expect(firstBlock.body,'block content').to.include('Genesis block');
+    });
+
+    it('returns an already created instance if exists', async () => {
+      bc = await BlockchainFactory.create();
+      expect(bc).to.equal(blockchain);
+    });
+  }); 
   after(async () =>  {
     await blockchain.chain.close();
   });

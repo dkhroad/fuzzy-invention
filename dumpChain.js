@@ -1,13 +1,16 @@
-
+const config = require('./env.json')[process.env.NODE_ENV || 'development'];
 const { 
-  Block, Blockchain
+  Block, Blockchain, BlockchainFactory
 } = require('./simpleChain.js');
 
 // Instantiate blockchain with blockchain variable
-console.log(process.env.NODE_ENV);
-const blockchain = process.env.NODE_ENV == 'test' ?
-  new Blockchain('./test/chain_test_data') : 
-  new Blockchain();
+async function getBlockchainInstance() {
+  let bc = await BlockchainFactory.create();
+  console.log('bc*****************************************: '+ bc);
+  return Promise.resolve(bc);
+}
+
+const blockchain =  new Blockchain();
 
 let last_block;
 let i=0;
