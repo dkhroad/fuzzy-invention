@@ -61,16 +61,11 @@ class MemPool {
 
   validateSig(payload) {
     if (!this.inMemPool(payload.address)) {
-      return {
-        registerStar: false,
-        status: {
-          code: 404,
-          message: "not found"
-        }
-      }
+      return null;
     }
     let address = payload.address;
     let req = this.cache[address];
+    debugger;
     let sigVerified =  verify(req.message, payload.address, payload.signature);
     let validationWindow = this.timeRemaining(req.requestTimeStamp);
     req.registerStar =   validationWindow > 0 ? true : false;

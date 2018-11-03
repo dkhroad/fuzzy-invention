@@ -5,14 +5,12 @@ const requestValidationSchema  = {
 }
 const messageSigValidationSchema = {
   address: Joi.string().alphanum().min(26).max(34).required(),
-  signature: Joi.string().base64()
+  signature: Joi.string().base64().required()
 }
 
 module.exports = {
   name: "NotarySvcPlugin",
   register: async (server,options) => {
-    let mempool = options.mempool;
-    let sigValidationSvc = options.sigValidationSvc;
     server.route([
       {
         method: 'POST',
@@ -23,6 +21,7 @@ module.exports = {
           }
         },
         handler: async(request,h) => {
+          let mempool = request.server.app.mempool;
           req=mempool.add(request.payload["address"]);
           return req; 
         }
@@ -36,8 +35,13 @@ module.exports = {
           }
         },
         handler: async(request,h) => {
-          result = sigValidationsvc.validateSignature(mempool[request.payload.address],request.payload);
-          return result;
+          let mempool = request.server.app.mempool;
+          result = mempool.validateSig(request.payload);
+          if (!result) {
+            return h.response("invalid address").code(404);
+          } else {
+            return result;
+          }
         }
       }
     ]);

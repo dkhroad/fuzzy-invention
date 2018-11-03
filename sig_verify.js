@@ -7,7 +7,8 @@ module.exports.verify = (message,address,signature) => {
 
 module.exports.sign = (privateKey,message) => {
   let keyPair = bitcoin.ECPair.fromWIF(privateKey);
-  var signature = bitcoinMessage.sign(message,key.privateKey, keyPair.compress);
-  return signature.toString('base64');
+  let signature = bitcoinMessage.sign(message,keyPair.privateKey, keyPair.compressed);
+  let signature_b64 = signature.toString('base64');
+  return signature_b64;
 }
 

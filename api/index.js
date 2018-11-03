@@ -6,7 +6,6 @@ const { Block, BlockchainFactory } = require('../simpleChain.js');
 module.exports = { 
   name: "BlockchainApiPlugin",
   register: async (server,options) => {
-    let blockchain = options.blockchain;
     server.route([
       {
         method: 'GET',
@@ -20,7 +19,7 @@ module.exports = {
         },
         handler: async (request, h) => {
           let bh = parseInt(request.params.height);
-
+          let blockchain = request.server.app.blockchain;
           let lb = await blockchain.getLastBlock();
           console.log(`getting block at height: ${bh}`);
           if (bh > lb.height) {
@@ -45,6 +44,7 @@ module.exports = {
           }
         },
         handler: async (request, h) => {
+          let blockchain = request.server.app.blockchain;
           console.log('in post handler with data: ' + JSON.stringify(request.payload.body)); 
           let bh = await  blockchain.addBlock(new Block(request.payload.body));
           let block =  await blockchain.getBlock(bh);

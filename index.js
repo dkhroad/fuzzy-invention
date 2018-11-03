@@ -3,35 +3,45 @@
 
 const Hapi = require('hapi');
 const api = require('./api');
+const Glue = require('glue');
 const { BlockchainFactory } = require('./simpleChain.js');
 const { MemPool } = require('./mempool.js');
-const server = Hapi.server({
-  port: 8000,
-  host: 'localhost'
-});
 
 
+const _manifest = {
+  server: {
+      port: 8000,
+      host: 'localhost'
+  },
+  register : {
+    plugins: [
+      {
+        plugin: require('./api'),
+      },
+      {
+        plugin: require('./notary_svc'),
+      }
+    ]
+  }
+}
+
+const _options = {
+  relativeTo: __dirname
+};
 
 
-const init = async () => {
+const init = async (manifest=_manifest,options=_options) => {
   try {
-  console.log('In server init');
-  blockchain =  await BlockchainFactory.create();
-  mempool = new MemPool();
-  console.log('registering plugins....');
-  await server.register([{
-    plugin: api,
-    options: {blockchain: blockchain}
-  }, {
-    plugin: require('./notary_svc'),
-    options: {blockchain: blockchain,mempool: mempool}
-  }]);
-
-  console.log('plugins registered');
-  await server.start();
-  console.log(`blockchain server running at: ${server.info.uri}`);
+    const server = await Glue.compose(manifest,options);
+    server.app.mempool = new MemPool();
+    server.app.blockchain = await BlockchainFactory.create();
+    if (!module.parent) {
+      await server.start();
+      console.log(`blockchain server running at: ${server.info.uri}`);
+    } 
+    return server;
   } catch (err) {
-    console.log("Error starting server", err);
+      console.log("Error starting server", err);
   }
 };
 
@@ -39,6 +49,8 @@ process.on('unhandledRejection',(err) => {
   console.log(err);
 });
 
-init();
+if (!module.parent) {
+  init()
+}
 
-module.exports = server;
+module.exports = init;
