@@ -59,6 +59,13 @@ class MemPool {
     clearTimeout(this.cache[address].timeOut);
   }
 
+  delete(address) {
+    if (this.inMemPool(address)) {
+      this.stopTimer(address);
+      delete this.cache[address]
+    }
+  }
+
   status(address) {
     if (!this.inMemPool(address)) {
       return null;

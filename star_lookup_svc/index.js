@@ -1,36 +1,55 @@
 const Joi = require('joi');
-
-
+/*
 // Encode image buffer to hex
 imgHexEncode = new Buffer(imgReadBuffer).toString('hex');
 // Decode hex
 var imgHexDecode = new Buffer(imgHexEncode, 'hex');
 */
-const requestSchema = {
-  address: Joi.string().alphanum().min(26).max(34).required(),
-  star: Joi.object({
-    dec: Joi.string().max(50).required(),
-    ra: Joi.string().max(50).required(),
-    story: Joi.string().max(500,'hex'),
-    mag: Joi.string().regex(/^[0-9]+\.?[0-9]+$/),
-    cons: Joi.string().max(50)
-  })
-};
-
 
 module.exports = { 
   name: "StarLookupSvc",
   register: async (server,options) => {
     server.route([
-    /*
       {
         method: 'GET',
-        path: '/block',
+        path: '/stars/address:{address}',
         options: {
           validate: {
-            payload: requestSchema
+            params: {
+              address: Joi.string().alphanum().min(26).max(34).required()
+            }
           }
         },
+        handler: async (request, h) => {
+          let blockchain = request.server.app.blockchain;
+          return blockchain.getAllBlocksForAddress(request.params.address);
+        }
+      },
+      {
+        method: 'GET',
+        path: '/stars/hash:{hash}',
+        options: {
+          validate: {
+            params: {
+              hash: Joi.string().alphanum().length(64).required()
+            }
+          }
+        },
+        handler: async (request, h) => {
+          let blockchain = request.server.app.blockchain;
+          return blockchain.getBlockByHash(request.params.hash);
+        }
+      },
+      {
+        method: 'GET',
+        path: '/block/{height}',
+        options: {
+          validate: {
+            params: {
+              height: Joi.number().integer().min(0).max(9999).default(0)
+            }
+          } 
+        }, 
         handler: async (request, h) => {
           let bh = parseInt(request.params.height);
           let blockchain = request.server.app.blockchain;
@@ -46,37 +65,7 @@ module.exports = {
             return blockchain.getBlock(bh);
           }
         }
-      },
-      */
-      {
-        method: 'POST',
-        path: '/block',
-        options: {
-          validate: {
-            payload: requestSchema
-          }
-        },
-        handler: async (request, h) => {
-          let blockchain = request.server.app.blockchain;
-          let mempool = request.server.app.mempool;
-
-          if (!mempool.inMemPool(request.payload.address)) {
-            return h.response('Missing address').code(404);
-          }
-          res = mempool.status(request.payload.address);
-          if (res.messageSignature !== "valid") {
-            return h.response('Unverified address').code(400);
-          }
-          if (res.validationWindow <= 0) {
-            return h.response('Address validation window expired').code(400);
-          }
-
-          request.payload.star.story = new Buffer.from(request.payload.star.story).toString('hex');
-          let bh = await  blockchain.addBlockFromData(request.payload);
-          let block =  await blockchain.getBlock(bh);
-          return h.response(block).code(201)
-        }
       }
-    ]);
+    ])
   }
 }

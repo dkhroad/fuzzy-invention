@@ -30,11 +30,8 @@ class BlockchainFactory {
       _blockchain = new Blockchain();
       console.log('adding genesis block');
       await _blockchain.addGenesisBlockIfMissing(); 
-      console.log('done adding genesisblock');
-      console.log('1');
       return Promise.resolve(_blockchain);
     } else {  
-      console.log('2');
       return Promise.resolve(_blockchain);
     }
   }
@@ -95,7 +92,6 @@ class Blockchain{
   }
   async addBlock(newBlock){
     let self = this;
-
     try {
       await self.addGenesisBlockIfMissing();
       let lastBlock = await self.getLastBlock();
@@ -173,6 +169,45 @@ class Blockchain{
     }
   }
 
+  getBlockByHash(hash) {
+    let self = this;
+    console.log("looking for a block with hash",hash);
+    return new Promise(function(resolve,reject) {
+      self.chain.createReadStream()
+        .on('data',function(data) {
+          let block = JSON.parse(data.value);
+          if (block.hash === hash) {
+            resolve(block);
+          }
+        }).on('end',function() {
+          resolve({});
+        }).on('error',function(error) {
+          console.log(error)
+          reject(error);
+        });
+    });
+
+  }
+  getAllBlocksForAddress(address) {
+    let blocks = []
+    let self = this;
+    return new Promise(function(resolve,reject) {
+      self.chain.createReadStream()
+        .on('data',function(data) {
+          let block = JSON.parse(data.value);
+          if (block.body.hasOwnProperty('address') && block.body.address === address) {
+            blocks.push(block);
+          }
+        }).on('end',function() {
+          console.log('# of blocks in chain',blocks.length);
+          resolve(blocks);
+        }).on('error',function(error) {
+          console.log(error)
+          reject(error);
+        });
+    });
+
+  }
   // get all blocks from the blockchain 
   // blocks will be returned as an array of resolved promise
   getAllBlocks() {
@@ -191,6 +226,7 @@ class Blockchain{
         });
     });
   }
+
 
   // Validate blockchain
   validateChain(){

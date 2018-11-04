@@ -33,32 +33,6 @@ module.exports = {
   name: "StarRegistrationSvc",
   register: async (server,options) => {
     server.route([
-    /*
-      {
-        method: 'GET',
-        path: '/block',
-        options: {
-          validate: {
-            payload: requestSchema
-          }
-        },
-        handler: async (request, h) => {
-          let bh = parseInt(request.params.height);
-          let blockchain = request.server.app.blockchain;
-          let lb = await blockchain.getLastBlock();
-          console.log(`getting block at height: ${bh}`);
-          if (bh > lb.height) {
-            var err = {
-              error: 'Bad Request',
-              message: 'Invalid block height '+ lb.height
-            }
-            return h.response(err).code(400);
-          } else {
-            return blockchain.getBlock(bh);
-          }
-        }
-      },
-      */
       {
         method: 'POST',
         path: '/block',
@@ -82,9 +56,13 @@ module.exports = {
             return h.response('Address validation window expired').code(400);
           }
 
-          request.payload.star.story = new Buffer.from(request.payload.star.story).toString('hex');
+          request.payload.star.storyDecoded = request.payload.star.story
+          request.payload.star.story = new Buffer.from(request.payload.star.storyDecoded).toString('hex');
           let bh = await  blockchain.addBlockFromData(request.payload);
           let block =  await blockchain.getBlock(bh);
+          delete block.body.star.storyDecoded;
+          mempool.delete(request.payload.address);
+
           return h.response(block).code(201)
         }
       }

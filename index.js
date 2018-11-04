@@ -19,6 +19,9 @@ const _manifest = {
       },
       {
         plugin: require('./notary_svc'),
+      },
+      {
+        plugin: require('./star_lookup_svc')
       }
     ]
   }
