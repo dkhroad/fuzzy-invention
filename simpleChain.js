@@ -28,7 +28,6 @@ class BlockchainFactory {
   static async create() {
     if (!_blockchain) {
       _blockchain = new Blockchain();
-      console.log('adding genesis block');
       await _blockchain.addGenesisBlockIfMissing(); 
       return Promise.resolve(_blockchain);
     } else {  
@@ -74,7 +73,6 @@ class Blockchain{
       }
       let height = await this.getBlockHeight();
       if (height == -1) { // add genesis block 
-        console.log('adding genesis block');
         let gBlock = new Block("First block in the chain - Genesis block");
         gBlock.height = 0;
         gBlock.time = new Date().getTime().toString().slice(0,-3);
@@ -103,7 +101,6 @@ class Blockchain{
       newBlock.time = new Date().getTime().toString().slice(0,-3);
       newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
       await self.chain.put(self.lexi(newBlock.height),JSON.stringify(newBlock));
-      console.log('added block at height: '+ newBlock.height);
       return newBlock.height;
     }catch (err) {
       console.log(err);

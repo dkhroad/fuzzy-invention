@@ -25,7 +25,7 @@ describe('GET /stars/address:{address}',async () => {
   before(async () => {
     del.sync(config.db);
     my_server = await server(manifest);
-    my_server.table().forEach((route) => console.log(`${route.method}\t${route.path}`));
+    // my_server.table().forEach((route) => console.log(`${route.method}\t${route.path}`));
     let payloads = [
       {
         "address": "142BDCeSGbXjWKaAnYXbMpZ6sbrSAo3DpZ",
@@ -69,7 +69,7 @@ describe('GET /block/{height}', async () => {
   before(async () => {
     del.sync(config.db);
     my_server = await server(manifest);
-    my_server.table().forEach((route) => console.log(`${route.method}\t${route.path}`));
+    // my_server.table().forEach((route) => console.log(`${route.method}\t${route.path}`));
     let payload =  {
       "address": "142BDCeSGbXjWKaAnYXbMpZ6sbrSAo3DpZ",
       "star": {
@@ -107,7 +107,7 @@ describe('GET /stars/:{hash}', async () => {
   before(async ({context}) => {
     del.sync(config.db);
     my_server = await server(manifest);
-    my_server.table().forEach((route) => console.log(`${route.method}\t${route.path}`));
+    // my_server.table().forEach((route) => console.log(`${route.method}\t${route.path}`));
     let payload =  {
       "address": "142BDCeSGbXjWKaAnYXbMpZ6sbrSAo3DpZ",
       "star": {

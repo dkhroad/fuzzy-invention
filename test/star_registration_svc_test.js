@@ -146,7 +146,7 @@ describe('POST /block', async () => {
       "ra": "16h 29m 1.0s",
       "story": "466f756e642073746172207573696e672068747470733a2f2f7777772e676f6f676c652e636f6d2f736b792f"
     })
-    expect(mempool.inMemPool(address)).to.false();
+    expect(mempool.inMemPool(address)).to.true();
   });
 });
 

@@ -61,7 +61,6 @@ module.exports = {
           let bh = await  blockchain.addBlockFromData(request.payload);
           let block =  await blockchain.getBlock(bh);
           delete block.body.star.storyDecoded;
-          mempool.delete(request.payload.address);
 
           return h.response(block).code(201)
         }
