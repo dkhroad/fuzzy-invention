@@ -2,7 +2,6 @@
 
 
 const Hapi = require('hapi');
-const api = require('./api');
 const Glue = require('glue');
 const { BlockchainFactory } = require('./simpleChain.js');
 const { MemPool } = require('./mempool.js');
@@ -16,7 +15,7 @@ const _manifest = {
   register : {
     plugins: [
       {
-        plugin: require('./api'),
+        plugin: require('./star_registration_svc'),
       },
       {
         plugin: require('./notary_svc'),

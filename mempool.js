@@ -59,13 +59,24 @@ class MemPool {
     clearTimeout(this.cache[address].timeOut);
   }
 
+  status(address) {
+    if (!this.inMemPool(address)) {
+      return null;
+    }
+   let req=this.cache[address];
+    return { 
+      address: address,
+      messageSignature: req.messageSignature,
+      validationWindow: this.timeRemaining(req.requestTimeStamp)
+    }
+  }
+
   validateSig(payload) {
     if (!this.inMemPool(payload.address)) {
       return null;
     }
     let address = payload.address;
     let req = this.cache[address];
-    debugger;
     let sigVerified =  verify(req.message, payload.address, payload.signature);
     let validationWindow = this.timeRemaining(req.requestTimeStamp);
     req.registerStar =   validationWindow > 0 ? true : false;

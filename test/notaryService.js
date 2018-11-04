@@ -1,7 +1,6 @@
 const { expect } = require('code');
 const Lab = require('lab');
 const { after, before, describe, it } = exports.lab = Lab.script();
-const  NotarySvcPlugin = require('../notary_svc');
 const del = require('del');
 const server = require('../index.js');
 const {sign } = require('../sig_verify.js');

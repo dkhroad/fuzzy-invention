@@ -77,7 +77,7 @@ class Blockchain{
       }
       let height = await this.getBlockHeight();
       if (height == -1) { // add genesis block 
-        console.trace('adding genesis block');
+        console.log('adding genesis block');
         let gBlock = new Block("First block in the chain - Genesis block");
         gBlock.height = 0;
         gBlock.time = new Date().getTime().toString().slice(0,-3);
@@ -90,6 +90,9 @@ class Blockchain{
     }
   }
 
+  async addBlockFromData(body) {
+   return await this.addBlock(new Block(body));
+  }
   async addBlock(newBlock){
     let self = this;
 
