@@ -4,7 +4,6 @@ let _instance = null;
 class MemPool {
   constructor(validationWindow=300) {
     if (_instance) {
-      debugger;
       return _instance;
     }
     this.cache = {};
@@ -34,22 +33,27 @@ class MemPool {
 
   add(address) {
     let time = new Date().getTime(); 
-    let req = { 
-      registerStar: false,
-      requestTimeStamp: this.timeInSeconds(time),
-      validationWindow: this.validationWindow,
-      messageSignature: "not_verified",
-      message: address+':'+this.timeInSeconds(time)+':starRegistry',
-      timeOut: setTimeout(() => {
-        this.removeAddress(address)
-      },this.validationWindow * 1000),
+    let req;
+    if (this.inMemPool(address)) {
+      req = this.cache[address]
+    } else {
+      req = { 
+        registerStar: false,
+        requestTimeStamp: this.timeInSeconds(time),
+        validationWindow: this.validationWindow,
+        messageSignature: "not_verified",
+        message: address+':'+this.timeInSeconds(time)+':starRegistry',
+        timeOut: setTimeout(() => {
+          this.removeAddress(address)
+        },this.validationWindow * 1000),
+      }
     }
     
     this.cache[address] = req;
     return {
       address: address,
       requestTimeStamp: req.requestTimeStamp,
-      validationWindow: req.validationWindow,
+      validationWindow: this.timeRemaining(req.requestTimeStamp),
       message: req.message
     }
 

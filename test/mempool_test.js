@@ -9,28 +9,45 @@ const bitcoinMessage = require('bitcoinjs-message');
 describe('.add', () => { 
   let mempool;
   before(({context}) => {
-    context.validationWindow = 1;
-    mempool = new MemPool(context.validationWindow);
+    context.validationWindow = 0.05
+    mempool = new MemPool();
+    context.origValidatonWindow = mempool.validationWindow;
+    mempool.validationWindow = 0.05; 
+  });
+  after(({context}) => {
+    mempool.validationWindow = context.origValidatonWindow;
   });
   it('add an entry in mempool', ({context}) => {
     // let mempool = context.mempool;
     let rts =  mempool.timeInSeconds(new Date().getTime());
     let res = mempool.add("deadbeef");
     expect(res.address).to.equal("deadbeef");
-    expect(res.validationWindow).to.equal(context.validationWindow);
+    expect(res.validationWindow).to.below(context.validationWindow);
     expect(res.requestTimeStamp).to.equal(rts);
     expect(res.message).to.equal("deadbeef:"+res.requestTimeStamp+":starRegistry")
     expect(mempool.cache["deadbeef"].timeOut).to.not.be.undefined();
   });
 
 
-  it('removes the entry when timer expires (will sleep..) ', async () => {
+  it.skip('removes the entry when timer expires (will sleep..) ', async () => {
     await new Promise((resolve) => {
       setTimeout(() => {
         resolve([])
       },1500);
     })
     expect(mempool.cache["deadbeef"]).to.not.exist();
+    expect(res.validationWindow).to.equal(context.validationWindow);
+  });
+
+  it('reduces validation window on resubmitting',async () => {
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        resolve([])
+      },10);
+    })
+    let res = mempool.add("deadbeef");
+    expect(res.validationWindow).to.be.below(0.05);
+
   });
 
 });
