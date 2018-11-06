@@ -22,7 +22,7 @@ const requestSchema = {
   star: Joi.object({
     dec: Joi.string().max(50).required(),
     ra: Joi.string().max(50).required(),
-    story: Joi.string().max(500,'hex'),
+    story: Joi.string().regex(/[\x00-\x7F]/).max(500,'hex'), 
     mag: Joi.string().regex(/^[0-9]+\.?[0-9]+$/),
     cons: Joi.string().max(50)
   })
@@ -56,12 +56,12 @@ module.exports = {
             return h.response('Address validation window expired').code(400);
           }
 
-          request.payload.star.storyDecoded = request.payload.star.story
-          request.payload.star.story = new Buffer.from(request.payload.star.storyDecoded).toString('hex');
+          request.payload.star.story = new Buffer.from(request.payload.star.story).toString('hex');
           let bh = await  blockchain.addBlockFromData(request.payload);
           let block =  await blockchain.getBlock(bh);
-          delete block.body.star.storyDecoded;
-
+           
+          mempool.delete(request.payload.address);
+          
           return h.response(block).code(201)
         }
       }

@@ -19,26 +19,6 @@ const manifest = {
     ]
   }
 }
-/*
-describe('GET /block{height}', async function() {
-  let random = 0;
-  before(async () => {
-    del.sync(config.db);
-    random = Math.floor(Math.random() * 10);
-    console.log('doing post for get');
-    let res  = await server.inject({
-      method: 'POST',
-      url: '/block',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      payload: {
-        "body": "Testing block creation via POST for GET- " + random
-      }
-    });
-  });
-});
-*/
 
 describe('POST /block', async () => {
   let my_server;
@@ -146,7 +126,8 @@ describe('POST /block', async () => {
       "ra": "16h 29m 1.0s",
       "story": "466f756e642073746172207573696e672068747470733a2f2f7777772e676f6f676c652e636f6d2f736b792f"
     })
-    expect(mempool.inMemPool(address)).to.true();
+    // invalidates the request after a block is added successfully
+    expect(mempool.inMemPool(address)).to.false();
   });
 });
 
