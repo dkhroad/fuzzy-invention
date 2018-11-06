@@ -1,10 +1,15 @@
 const Joi = require('joi');
-/*
-// Encode image buffer to hex
-imgHexEncode = new Buffer(imgReadBuffer).toString('hex');
-// Decode hex
-var imgHexDecode = new Buffer(imgHexEncode, 'hex');
-*/
+
+
+function addDecodedStory(blocks) {
+  return blocks.map(block => {
+    let newBlock = block;
+    try { 
+      newBlock.body.star.storyDecoded = new Buffer.from(block.body.star.story,'hex').toString();
+    } catch(e) {}
+    return newBlock;
+  });
+}
 
 module.exports = { 
   name: "StarLookupSvc",
@@ -22,7 +27,9 @@ module.exports = {
         },
         handler: async (request, h) => {
           let blockchain = request.server.app.blockchain;
-          return blockchain.getAllBlocksForAddress(request.params.address);
+          let blocks = await blockchain.getAllBlocksForAddress(request.params.address);
+          blocks = addDecodedStory(blocks);
+          return blocks;
         }
       },
       {
@@ -37,7 +44,10 @@ module.exports = {
         },
         handler: async (request, h) => {
           let blockchain = request.server.app.blockchain;
-          return blockchain.getBlockByHash(request.params.hash);
+          let block= await blockchain.getBlockByHash(request.params.hash);
+          blocks = addDecodedStory([block]);
+          return blocks[0];
+
         }
       },
       {
@@ -62,7 +72,9 @@ module.exports = {
             }
             return h.response(err).code(400);
           } else {
-            return blockchain.getBlock(bh);
+            let block = await blockchain.getBlock(bh);
+            let blocks = addDecodedStory([block]);
+            return blocks[0];
           }
         }
       }
